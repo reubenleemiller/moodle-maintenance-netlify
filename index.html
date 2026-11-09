@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#0f6cbf" />
+    <title>Maintenance | Learning Services</title>
+    <link rel="stylesheet" href="https://rmt-maintenance.netlify.app/styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="/" aria-label="Bentley School maintenance notice">
+          <img src="https://rmt-maintenance.netlify.app/bentley-school-logo.png" width="300" height="274" alt="Bentley School" />
+        </a>
+        <nav aria-label="Primary navigation">
+          <span class="nav-item current" aria-current="page">Home</span>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main" class="page-shell">
+      <section class="maintenance-card" aria-labelledby="maintenance-title">
+        <div class="icon" aria-hidden="true">
+          <svg viewBox="0 0 64 64" role="img">
+            <path d="M15 49 49 15M20 13l7 7-8 8-7-7 8-8Zm25 25 7 7-8 8-7-7 8-8Z" />
+            <path d="M10 54 25 39M39 25 54 10" />
+          </svg>
+        </div>
+        <p class="eyebrow">Bentley High School Math portal</p>
+        <h1 id="maintenance-title">This portal is currently deactivated</h1>
+        <p class="lead">
+          Your instructor has chosen to deactivate this portal to conserve resources.
+        </p>
+        <div class="notice" role="status">
+          <strong>Need access?</strong>
+          Please contact your instructor directly to request that this portal be activated.
+        </div>
+        <section class="contact-panel" aria-labelledby="contact-title">
+          <h2 id="contact-title">Contact your instructor</h2>
+          <p>Send a request below and your instructor will receive it by email.</p>
+          <form id="portal-access-request" method="POST" action="https://formsubmit.co/reuben.miller@wolfcreek.ab.ca">
+            <input type="hidden" name="_subject" value="Portal access request — Bentley High School Math" />
+            <input type="hidden" name="_next" value="https://rmt-maintenance.netlify.app/thanks.html" />
+            <input type="hidden" name="_url" value="https://rmt-maintenance.netlify.app/" />
+            <input type="hidden" name="_captcha" value="false" />
+            <p class="visually-hidden"><label>Do not fill this out if you are human: <input name="_honey" tabindex="-1" autocomplete="off" /></label></p>
+            <div class="form-grid">
+              <label>Your name<input name="name" type="text" autocomplete="name" required /></label>
+              <label>Email address<input name="email" type="email" autocomplete="email" required /></label>
+            </div>
+            <label>Which portal do you need?<select name="portal" required><option value="">Choose one</option><option>Moodle learning portal</option><option>Secure Exam Browser monitoring</option><option>Other</option></select></label>
+            <label>Message<textarea name="message" rows="5" required placeholder="Please explain why you need access."></textarea></label>
+            <button type="submit"><span class="button-label">Send access request</span><span class="button-spinner" aria-hidden="true"></span></button>
+          </form>
+        </section>
+      </section>
+    </main>
+
+    <footer>
+      <span>Bentley High School Math</span>
+      <span aria-hidden="true">•</span>
+      <span>Portal notice</span>
+    </footer>
+    <div id="submit-overlay" class="submit-overlay" hidden role="status" aria-live="assertive" aria-label="Sending your access request">
+      <div class="loading-widget">
+        <span class="loading-wheel" aria-hidden="true"></span>
+        <strong>Sending your request</strong>
+        <span>Please wait a moment…</span>
+      </div>
+    </div>
+    <script>
+      const accessForm = document.querySelector("#portal-access-request");
+      const submitOverlay = document.querySelector("#submit-overlay");
+      accessForm.querySelector('[name="_next"]').value = new URL("/thanks.html", window.location.origin).href;
+      accessForm.querySelector('[name="_url"]').value = window.location.href;
+      accessForm.addEventListener("submit", (event) => {
+        if (accessForm.dataset.submitting === "true") return;
+        event.preventDefault();
+        accessForm.dataset.submitting = "true";
+        const submitButton = accessForm.querySelector('button[type="submit"]');
+        submitButton.classList.add("is-submitting");
+        submitButton.disabled = true;
+        submitButton.setAttribute("aria-busy", "true");
+        submitOverlay.hidden = false;
+        requestAnimationFrame(() => setTimeout(() => accessForm.submit(), 80));
+      });
+    </script>
+  </body>
+</html>
