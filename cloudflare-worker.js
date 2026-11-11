@@ -202,6 +202,15 @@ export default {
     const showMaintenance =
       url.searchParams.get(MAINTENANCE_PARAMETER) === "1";
 
+    // FormSubmit redirects here after a successful request. This is a hosted
+    // page, not a Lenovo page, so it must not wait for the Lenovo health check.
+    if (
+      request.method === "GET" &&
+      url.pathname === "/thanks.html"
+    ) {
+      return maintenanceResponse(THANK_YOU_URL, 200);
+    }
+
     if (isHealthCheck) {
       url.searchParams.delete(HEALTH_CHECK_PARAMETER);
       return healthCheckResponse(request, url);
@@ -217,14 +226,6 @@ export default {
 
     if (showMaintenance) {
       return maintenanceResponse();
-    }
-
-    // Thank-you page
-    if (
-      request.method === "GET" &&
-      url.pathname === "/thanks.html"
-    ) {
-      return maintenanceResponse(THANK_YOU_URL, 200);
     }
 
     try {
