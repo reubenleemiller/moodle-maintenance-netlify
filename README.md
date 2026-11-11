@@ -10,7 +10,7 @@ netlify deploy --prod --dir .
 
 The Cloudflare Worker should fetch the resulting `https://<site>.netlify.app/` URL and return it with HTTP status `503`, preserving the learner's original URL.
 
-`cloudflare-worker.js` is the complete Worker source for this project. It immediately displays a full-page preloader for every HTML page request while a background health check contacts the routed Lenovo origin. Once that check finishes, it serves Lenovo when available or the Netlify maintenance page with HTTP status `503` when the origin is unavailable. No Worker variables or manual maintenance switch are required.
+`cloudflare-worker.js` is the complete Worker source for this project. It displays a full-page preloader while a background health check contacts the routed Lenovo origin. The preloader is shown at most once per browser session, and a successful check suppresses it for 15 minutes across sessions. Once the check finishes, it serves Lenovo when available or the Netlify maintenance page with HTTP status `503` when the origin is unavailable. No Worker variables or manual maintenance switch are required.
 
 Attach the Worker only to these routes:
 

@@ -8,6 +8,9 @@ const THANK_YOU_URL =
 const PRELOAD_PARAMETER = "__rmt_preloaded";
 const HEALTH_CHECK_PARAMETER = "__rmt_health_check";
 const MAINTENANCE_PARAMETER = "__rmt_maintenance";
+const PRELOADER_SESSION_COOKIE = "rmt_preloader_seen";
+const HEALTHY_ORIGIN_COOKIE = "rmt_origin_healthy";
+const HEALTHY_ORIGIN_TTL_SECONDS = 15 * 60;
 const ORIGIN_ERROR_STATUSES = new Set([
   500, 502, 503, 504,
   520, 521, 522, 523, 524, 525, 526, 527
@@ -36,6 +39,23 @@ function isDocumentRequest(request) {
     request.method === "GET" &&
     request.headers.get("Accept")?.includes("text/html")
   );
+}
+
+function hasCookie(request, name) {
+  return request.headers
+    .get("Cookie")
+    ?.split(";")
+    .some((cookie) => cookie.trim().startsWith(`${name}=`)) ?? false;
+}
+
+function cookie(name, value, maxAge) {
+  return [
+    `${name}=${value}`,
+    "Path=/",
+    "Secure",
+    "SameSite=Lax",
+    ...(maxAge === undefined ? [] : [`Max-Age=${maxAge}`])
+  ].join("; ");
 }
 
 function preloaderResponse(url) {
@@ -90,7 +110,9 @@ function preloaderResponse(url) {
     headers: {
       "Content-Type": "text/html; charset=utf-8",
       "Cache-Control": "no-store",
-      "X-Robots-Tag": "noindex, nofollow"
+      "X-Robots-Tag": "noindex, nofollow",
+      // No Max-Age means this cookie expires when the browser session ends.
+      "Set-Cookie": cookie(PRELOADER_SESSION_COOKIE, "1")
     }
   });
 }
@@ -111,7 +133,18 @@ async function healthCheckResponse(request, url) {
     originResponse.body?.cancel();
 
     return Response.json({ originAvailable }, {
-      headers: { "Cache-Control": "no-store" }
+      headers: {
+        "Cache-Control": "no-store",
+        ...(originAvailable
+          ? {
+              "Set-Cookie": cookie(
+                HEALTHY_ORIGIN_COOKIE,
+                "1",
+                HEALTHY_ORIGIN_TTL_SECONDS
+              )
+            }
+          : {})
+      }
     });
   } catch {
     return Response.json({ originAvailable: false }, {
@@ -201,6 +234,10 @@ export default {
       url.searchParams.get(HEALTH_CHECK_PARAMETER) === "1";
     const showMaintenance =
       url.searchParams.get(MAINTENANCE_PARAMETER) === "1";
+    const hasSeenPreloaderThisSession =
+      hasCookie(request, PRELOADER_SESSION_COOKIE);
+    const hasRecentlyHealthyOrigin =
+      hasCookie(request, HEALTHY_ORIGIN_COOKIE);
 
     // FormSubmit redirects here after a successful request. This is a hosted
     // page, not a Lenovo page, so it must not wait for the Lenovo health check.
@@ -216,7 +253,12 @@ export default {
       return healthCheckResponse(request, url);
     }
 
-    if (isDocumentRequest(request) && !hasShownPreloader) {
+    if (
+      isDocumentRequest(request) &&
+      !hasShownPreloader &&
+      !hasSeenPreloaderThisSession &&
+      !hasRecentlyHealthyOrigin
+    ) {
       return preloaderResponse(url);
     }
 
